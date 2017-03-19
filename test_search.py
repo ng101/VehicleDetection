@@ -21,13 +21,17 @@ images = glob.glob('../test_images/test*.jpg')
 
 for img_name in images:
     img_vec = mpimg.imread(img_name)
-    bboxes, hmap, labels = search.search(img_vec, clf, scaler,
+    bboxes, prob, hmap, labels, allboxes = search.search(img_vec, clf, scaler,
                                          feature_params, window_size)
+    print(bboxes, prob)
+    search_img_vec = draw_boxes.draw_boxes(img_vec, allboxes, (255, 0, 0))
     new_img_vec = heat.draw_labeled_bboxes(img_vec, labels)
+    #plt.imshow(new_img_vec)
+    #plt.show()
     print("{} cars found".format(labels[1]))
     f, ((ax1, ax2, ax3)) = plt.subplots(1, 3, figsize=(24, 9))
     f.tight_layout()
-    ax1.imshow(img_vec)
+    ax1.imshow(search_img_vec)
     ax1.set_title('Original Image', fontsize=40)
 
     ax2.imshow(new_img_vec)

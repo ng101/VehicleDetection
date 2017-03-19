@@ -8,6 +8,7 @@ import feature_extraction
 import draw_boxes
 import heat
 import search
+import track_and_filter
 
 with open("classifiers/classify.p", "rb") as f:
     clf_params = pickle.load(f)
@@ -17,10 +18,17 @@ scaler = clf_params["scl"]
 feature_params = clf_params['params']
 window_size = clf_params['window_shape'][0]
 
+tracker = track_and_filter.Track()
+
 def process_image(img_vec):
-    bboxes, hmap, labels = search.search(img_vec, clf, scaler,
+    bboxes, prob, hmap, labels, allboxes = search.search(img_vec, clf, scaler,
                                          feature_params, window_size)
     new_img_vec = heat.draw_labeled_bboxes(img_vec, labels)
+    #chmap, centroids, filt_bboxes = tracker.track(img_vec, bboxes, hmap, labels)
+    #new_img_vec = draw_boxes.draw_boxes(img_vec, filt_bboxes)
+    #new_img_vec[chmap] = [255, 0, 0]
+    #plt.imshow(new_img_vec)
+    #plt.show()
     return new_img_vec 
 
 PREFIX = '../'

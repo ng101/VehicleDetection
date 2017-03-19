@@ -5,12 +5,15 @@ import pickle
 import cv2
 from scipy.ndimage.measurements import label
 
-def add_heat(heatmap, bbox_list):
+def add_heat(heatmap, bbox_list, prob):
     # Iterate through list of bboxes
-    for box in bbox_list:
+    for i in range(len(bbox_list)):
+        box = bbox_list[i]
+        p = prob[i]
         # Add += 1 for all pixels inside each bbox
         # Assuming each "box" takes the form ((x1, y1), (x2, y2))
-        heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
+        if p > 0:
+            heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
 
     # Return updated heatmap
     return heatmap

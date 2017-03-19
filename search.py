@@ -21,15 +21,16 @@ def sample_hog(hogs, ypos, xpos, ncells_per_window, channel='ALL'):
 
  
 def find_cars(img_vec, feature_params, window_size, 
-        ystart, ystop, scale, clf, scaler):
+        ystart, ystop, xstart, xstop, yscale, xscale,
+        cells_per_step, clf, scaler):
     img_tosearch = feature_extraction.convert_color(img_vec,
             color_space=feature_params['colorspace'])
     img_tosearch = feature_extraction.normalize_255(img_tosearch)
-    img_tosearch = img_tosearch[ystart:ystop,:,:]
+    img_tosearch = img_tosearch[ystart:ystop, xstart:xstop,:]
 
-    if scale != 1:
+    if xscale != 1 or yscale != 1:
         imshape = img_tosearch.shape
-        img_tosearch = cv2.resize(img_tosearch, (np.int(imshape[1]/scale), np.int(imshape[0]/scale)))
+        img_tosearch = cv2.resize(img_tosearch, (np.int(imshape[1]/xscale), np.int(imshape[0]/yscale)))
 
     ch1 = img_tosearch[:,:,0]
     ch2 = img_tosearch[:,:,1]
@@ -44,7 +45,6 @@ def find_cars(img_vec, feature_params, window_size,
     orient = feature_params['orient']
 
     ncells_per_window = (window_size // pix_per_cell) - 1 
-    cells_per_step = 2  # Instead of overlap, define how many cells to step
     nxsteps = (nxcells - ncells_per_window) // cells_per_step
     nysteps = (nycells - ncells_per_window) // cells_per_step
 
@@ -57,6 +57,8 @@ def find_cars(img_vec, feature_params, window_size,
             cell_per_block, feature_vec=False)
 
     bboxes = []
+    allbboxes = []
+    prob = []
 
     for xb in range(nxsteps):
         for yb in range(nysteps):
@@ -91,26 +93,43 @@ def find_cars(img_vec, feature_params, window_size,
             test_features = scaler.transform(comb_features)
             test_prediction = clf.predict(test_features)
 
-            if test_prediction == 1:
-                xbox_left = np.int(xleft * scale)
-                ytop_draw = np.int(ytop * scale)
-                win_draw = np.int(window_size * scale)
-                bboxes.append(((xbox_left, ytop_draw + ystart), 
-                    (xbox_left + win_draw, ytop_draw + win_draw + ystart)))
+            xbox_left = np.int(xleft * xscale)
+            ytop_draw = np.int(ytop * yscale)
+            xwin = np.int(window_size * xscale)    
+            ywin = np.int(window_size * yscale)    
+            bbox = ((xbox_left + xstart, ytop_draw + ystart), 
+                    (xbox_left + xstart + xwin, ytop_draw + ywin + ystart))
+            allbboxes.append(bbox) 
 
-    return bboxes
+            if test_prediction == 1:
+                decision_func = clf.decision_function(test_features)
+                bboxes.append(bbox)
+                prob.append(decision_func)
+
+    return bboxes, prob, allbboxes
 
 def search(img_vec, clf, scaler, feature_params, window_size, heat_map=None):
     if heat_map is None:
         heat_map = np.zeros_like(img_vec[:, :, 0]).astype(np.float)
-    y_start_stops = [(400, 450), (400, 700), (400, 700)]
-    scales = [0.25, 1.5, 2]
+    y_start_stops = [(400, 425), (400, 700), (400, 700)]
+    x_start_stops = [(500, 900), (200, 1260), (200, 1260)]
+    yscales = [0.25, 1.5, 1.5]
+    xscales = [0.25, 1.5, 2]
+    cells_per_step = [4, 2, 1]
     bboxes = []
-    for i in range(len(scales)):
+    allbboxes = []
+    prob = []
+    #for i in range(len(scales)):
+    for i in range(len(yscales)):
         ystart, ystop = y_start_stops[i][0], y_start_stops[i][1]
-        b = find_cars(img_vec, feature_params, window_size,
-                ystart, ystop, scales[i], clf, scaler)
+        xstart, xstop = x_start_stops[i][0], x_start_stops[i][1]
+        b, p, a = find_cars(img_vec, feature_params, window_size,
+                ystart, ystop, xstart, xstop, yscales[i], xscales[i],
+                cells_per_step[i], clf, scaler)
+        
         bboxes += b
-    heat_map = heat.add_heat(heat_map, bboxes)
+        prob += p
+        allbboxes += a
+    heat_map = heat.add_heat(heat_map, bboxes, prob)
     labels = heat.get_labels(heat_map)
-    return bboxes, heat_map, labels
+    return bboxes, prob, heat_map, labels, allbboxes

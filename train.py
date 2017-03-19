@@ -18,8 +18,8 @@ params = {
         'pixels_per_cell': 8,
         'cells_per_block': 2,
         'hog_channel': 'ALL', # Can be 0, 1, 2, or "ALL"
-        'spatial_feat': False,
-        'hist_feat': False,
+        'spatial_feat': True,
+        'hist_feat': True,
         'hog_feat': True
         }
 
