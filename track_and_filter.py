@@ -55,13 +55,14 @@ class Track:
                 paths.append(np.polyfit(nonzero[0], nonzero[1], 2))
         return paths
 
-    def track1(self, img, bboxes, hmap, labels):
+    def track(self, img, hmap):
         self.hmaps.append(hmap)
         integrated_hmap = sum(self.hmaps[-1*Track.NUM_FRAMES_TO_TRACK:])
         new_hmap = heat.apply_threshold(integrated_hmap, 2)
         new_labels = heat.get_labels(new_hmap)
+        return new_labels
 
-    def track(self, img, bboxes, hmap, labels):
+    def track1(self, img, bboxes, hmap, labels):
         self.counter += 1
         combined_hmap = self.get_combined_chmap(img)
         paths = self.get_paths(combined_hmap)

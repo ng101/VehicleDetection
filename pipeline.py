@@ -21,9 +21,11 @@ window_size = clf_params['window_shape'][0]
 tracker = track_and_filter.Track()
 
 def process_image(img_vec):
-    bboxes, prob, hmap, labels, allboxes = search.search(img_vec, clf, scaler,
+    bboxes, prob, hmap, allboxes = search.search(img_vec, clf, scaler,
                                          feature_params, window_size)
-    new_img_vec = heat.draw_labeled_bboxes(img_vec, labels)
+    #labels = heat.get_labels(hmap)
+    new_labels = tracker.track(img_vec, hmap)
+    new_img_vec = heat.draw_labeled_bboxes(img_vec, new_labels)
     #chmap, centroids, filt_bboxes = tracker.track(img_vec, bboxes, hmap, labels)
     #new_img_vec = draw_boxes.draw_boxes(img_vec, filt_bboxes)
     #new_img_vec[chmap] = [255, 0, 0]

@@ -21,8 +21,9 @@ images = glob.glob('../test_images/test*.jpg')
 
 for img_name in images:
     img_vec = mpimg.imread(img_name)
-    bboxes, prob, hmap, labels, allboxes = search.search(img_vec, clf, scaler,
+    bboxes, prob, hmap, allboxes = search.search(img_vec, clf, scaler,
                                          feature_params, window_size)
+    labels = heat.get_labels(hmap)
     print(bboxes, prob)
     search_img_vec = draw_boxes.draw_boxes(img_vec, allboxes, (255, 0, 0))
     new_img_vec = heat.draw_labeled_bboxes(img_vec, labels)

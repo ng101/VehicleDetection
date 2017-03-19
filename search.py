@@ -131,5 +131,4 @@ def search(img_vec, clf, scaler, feature_params, window_size, heat_map=None):
         prob += p
         allbboxes += a
     heat_map = heat.add_heat(heat_map, bboxes, prob)
-    labels = heat.get_labels(heat_map)
-    return bboxes, prob, heat_map, labels, allbboxes
+    return bboxes, prob, heat_map, allbboxes
