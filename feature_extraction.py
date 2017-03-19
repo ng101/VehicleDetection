@@ -63,7 +63,7 @@ def extract_features_from_image_vec(feature_image, spatial_size=(32, 32),
                 hog_features.append(get_hog_features(feature_image[:,:,channel],
                     orient, pix_per_cell, cell_per_block,
                     vis=False, feature_vec=True))
-                hog_features = np.ravel(hog_features)        
+            hog_features = np.ravel(hog_features)        
         else:
             hog_features = get_hog_features(feature_image[:,:,hog_channel],
                     orient, pix_per_cell, cell_per_block,
@@ -72,15 +72,7 @@ def extract_features_from_image_vec(feature_image, spatial_size=(32, 32),
         file_features.append(hog_features)
     return file_features
 
-
-def extract_features_from_image_file(img, color_space='RGB',
-        spatial_size=(32, 32),
-        hist_bins=32, orient=9,
-        pix_per_cell=8, cell_per_block=2, hog_channel=0,
-        spatial_feat=True, hist_feat=True, hog_feat=True):
-    # Read in each one by one
-    image = mpimg.imread(img)
-    # apply color conversion if other than 'RGB'
+def convert_color(image, color_space):
     if color_space != 'RGB':
         if color_space == 'HSV':
             feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
@@ -93,8 +85,23 @@ def extract_features_from_image_file(img, color_space='RGB',
         elif color_space == 'YCrCb':
             feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
         else: feature_image = np.copy(image)
+    return feature_image
 
-    feature_image = (feature_image / np.max(feature_image)) * 255
+
+def normalize_255(img_vec):
+    return ((img_vec / np.max(img_vec)) * 255)
+
+
+def extract_features_from_image_file(img, color_space='RGB',
+        spatial_size=(32, 32),
+        hist_bins=32, orient=9,
+        pix_per_cell=8, cell_per_block=2, hog_channel=0,
+        spatial_feat=True, hist_feat=True, hog_feat=True):
+    # Read in each one by one
+    image = mpimg.imread(img)
+    # apply color conversion if other than 'RGB'
+    feature_image = convert_color(image, color_space)    
+    feature_image = normalize_255(feature_image)
     features = extract_features_from_image_vec(feature_image,
             spatial_size, hist_bins, orient,
             pix_per_cell, cell_per_block,
@@ -168,14 +175,4 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
     # Return the list of windows
     return window_list
 
-# Define a function to draw bounding boxes
-def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
-    # Make a copy of the image
-    imcopy = np.copy(img)
-    # Iterate through the bounding boxes
-    for bbox in bboxes:
-        # Draw a rectangle given bbox coordinates
-        cv2.rectangle(imcopy, bbox[0], bbox[1], color, thick)
-    # Return the image copy with boxes drawn
-    return imcopy
 

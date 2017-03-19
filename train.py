@@ -7,18 +7,19 @@ from sklearn.cross_validation import train_test_split
 import pickle
 import datetime
 import time
+import matplotlib.image as  mpimg
 
 # Params
 params = {
         'colorspace': 'YCrCb', # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
         'spatial_size': (32, 32),
         'hist_bins': 32,
-        'orient': 9,
+        'orient': 18,
         'pixels_per_cell': 8,
         'cells_per_block': 2,
-        'hog_channel': 0, # Can be 0, 1, 2, or "ALL"
-        'spatial_feat': True,
-        'hist_feat': True,
+        'hog_channel': 'ALL', # Can be 0, 1, 2, or "ALL"
+        'spatial_feat': False,
+        'hist_feat': False,
         'hog_feat': True
         }
 
@@ -27,10 +28,24 @@ params = {
 cars = glob.glob('../vehicles/*/*.png')
 noncars = glob.glob('../non-vehicles/*/*.png')
 
-sample_size = 100
-cars = cars[0:sample_size]
-noncars = noncars[0:sample_size]
+# Define a function to return some characteristics of the dataset
+def data_look(car_list, notcar_list):
+    data_dict = {}
+    # Define a key in data_dict "n_cars" and store the number of car images
+    data_dict["n_cars"] = len(car_list)
+    # Define a key "n_notcars" and store the number of notcar images
+    data_dict["n_notcars"] = len(notcar_list)
+    # Read in a test image, either car or notcar
+    # Define a key "image_shape" and store the test image shape 3-tuple
+    img = mpimg.imread(car_list[0])
+    data_dict["image_shape"] = img.shape
+    # Define a key "data_type" and store the data type of the test image.
+    data_dict["data_type"] = img.dtype
+    # Return data_dict
+    return data_dict
 
+look = data_look(cars, noncars)
+print(look)
 print(len(cars), len(noncars))
 
 features = feature_extraction.extract_features_from_images(cars + noncars, 
@@ -69,6 +84,8 @@ print('My SVC predicts: ', clf.predict(X_test[0:n_predict]))
 print('For these',n_predict, 'labels: ', y_test[0:n_predict])
 t2 = time.time()
 print(round(t2-t, 5), 'Seconds to predict', n_predict,'labels')
-st = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+st = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d%H:%M:%S')
 with open('classifiers/classify-{}-{}.p'.format(accuracy, st), 'wb') as f:
-    pickle.dump({'clf': clf, 'scl': X_scaler, 'params': params}, f)
+    pickle.dump({'clf': clf, 'scl': X_scaler,
+        'params': params, 'window_shape': look['image_shape'][0:2]},
+        f)
