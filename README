@@ -1,1 +1,5 @@
-Credits: Most of the code here in taken from class lessons of Udacity's Self Driving Car Nanodegree Term 1
+Credits: Most of the code here including classifier.py, heat.py, draw_boxes.py, search.py, feature_extraction.py is taken from class lessons of Udacity's Self Driving Car Nanodegree Term 1
+
+Aim of the project was to come up with vehicle detection pipeline. Overall pipeline included extracting features, classification (cars vs non-cars), searching for cars in an image (sliding window search), thresholding positive detections (relying on detections in similar areas) and filtering out false positives.
+
+This code is for submission to Udacity's self driving car nanodegree Term 1 project. Most of the code is taken from classwork, with few improvements and experimentation for coming up with good params for classifier and sliding window search being the major effort on my side.
